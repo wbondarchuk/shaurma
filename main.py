@@ -3,120 +3,168 @@ import sys
 
 from email import message
 from threading import Thread
-import order
+
+from telebot.types import ReplyKeyboardMarkup, KeyboardButton
+
+
 import telebot
 import shaurma
-from telebot import types
+import  time
 
-order_list = []
+# todo init
 token = '2097318317:AAE-6SFnxE8TOzRP6kG6iPKssa-UV_fIDQg'
 bot = telebot.TeleBot(token)
-cur = order.order("1", [])
+cur = 0
+finished = False
+order_list = []
+to_do = []
+vidacha = []
+
+class Ui(QtWidgets.QMainWindow):
+    def __init__(self):
+        super(Ui, self).__init__()
+        uic.loadUi('untitled.ui', self)
+        self.show()
+        self.ol.clicked.connect(self.from_ol_in_vl)
+        self.vl.clicked.connect(self.from_vl)
+
+    def from_ol_in_vl(self):
+        num_sh = int(self.editTodo.text())
+        vidacha.append(to_do[num_sh - 1])
+        del to_do[num_sh - 1]
 
 
+    def from_vl(self):
+        num_sh = int(self.editV.text())
+        del vidacha[num_sh - 1]
+
+    def update(self):
+        while True:
+            self.listOrder.clear()
+            for order in to_do:
+                self.listOrder.addItem(str(order))
+            self.listV.clear()
+            for order in vidacha:
+                self.listV.addItem(str(order))
+            time.sleep(1)
+
+
+
+# todo перенести все методы
 @bot.message_handler(commands=['start'])
 def button_message(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    item1 = types.KeyboardButton("шаурма 1")
-    item2 = types.KeyboardButton("шаурма 2")
-    item3 = types.KeyboardButton("шаурма 3")
-    item4 = types.KeyboardButton("шаурма 4")
+    if len(order_list) == 0:
+        order_list.append(shaurma.shaurma(1, [], bot, message))
+
+def choice_additives(message):
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    item1 = KeyboardButton("добавка сыр")
+    item2 = KeyboardButton("добавка мясо")
+    item3 = KeyboardButton("добавка огурцы")
+    item5 = KeyboardButton("добавка халапеньо")
+    item6 = KeyboardButton("добавка сухарики")
+    item7 = KeyboardButton("добавка помидоры")
+    item8 = KeyboardButton("добавка картофель фри")
+    item9 = KeyboardButton("добавка кукурза")
+    item10 = KeyboardButton("добавка ананас")
+    item11 = KeyboardButton("добавка соус острый")
+    item12 = KeyboardButton("/finish")
     markup.add(item1)
     markup.add(item2)
     markup.add(item3)
-    markup.add(item4)
-    bot.send_message(message.chat.id, 'Выберите что хотите', reply_markup=markup)
-    # choice_shaurma(message)
-
-
-@bot.message_handler(content_types='text')
-def choice_shaurma(message):
-    global cur
-    if message.text == "/finish":
-        name = 0
-        print("шаурма заказана")
-        order_list.append(cur)
-        print(f"ret code {name}")
-    else:
-        type, name = message.text.split()
-        if type == "шаурма":
-            cur = order.order(name,[])
-            choice_additives(message)
-        if type == "добавка":
-            cur.add.append(name)
-
-
-
-
-def choice_additives(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    item5 = types.KeyboardButton("добавка 1")
-    item6 = types.KeyboardButton("добавка 2")
-    item7 = types.KeyboardButton("добавка 3")
-    item8 = types.KeyboardButton("добавка 4")
     markup.add(item5)
     markup.add(item6)
     markup.add(item7)
     markup.add(item8)
+    markup.add(item9)
+    markup.add(item10)
+    markup.add(item11)
+    markup.add(item12)
     bot.send_message(message.chat.id, 'Выберите что добавить', reply_markup=markup)
-
-
-def preservation(message):
-    if message.text == "добавка 1":
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        item1 = types.KeyboardButton("добавка 1")
-        markup.add(item1)
-        choice_additives(message)
-        order.append("добавка 1")
-        final(message)
-    elif message.text == "добавка 2":
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        item2 = types.KeyboardButton("добавка 2")
-        markup.add(item2)
-        choice_additives(message)
-        order.append(" добавка 2")
-        final(message)
-    elif message.text == "добавка 3":
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        item2 = types.KeyboardButton("добавка 3")
-        markup.add(item2)
-        choice_additives(message)
-        order.append(" добавка 3")
-        final(message)
-    elif message.text == "добавка 4":
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        item2 = types.KeyboardButton("добавка 4")
-        markup.add(item2)
-        choice_additives(message)
-        order.append(" добавка 4")
-        final(message)
-
 
 def scanorder():
     while True:
-        w = input('Введите команду')
-        if w == "list":
-            for i in range(len(order_list)):
-                print(i + 1, ":",order_list[i].text,"Добавки:")
-                for add in order_list[i].add:
-                    print(add,end=" ")
-                print("")
-        if w == "del":
+        w = input()
+        if w == "do":
             num_sh = int(input())
-            del order_list[num_sh - 1]
+            vidacha.append(to_do[num_sh - 1])
+            del to_do[num_sh - 1]
+        if w == "done":
+            num_sh = int(input())
+            del vidacha[num_sh - 1]
+        elif w == "ol":
+            for i in range(len(to_do)):
+                additive1 = "Добавки: "
+                print("Номер заказа: ", i + 1)
+                print("Название шаурмы: ", to_do[i].name)
+                for additive in to_do[i].additives:
+                    additive1 += additive + "; "
+                print(additive1)
+        elif w == "vl":
+            for i in range(len(vidacha)):
+                additive1 = "Добавки: "
+                print("Номер заказа: ", i + 1)
+                print("Название шаурмы: ", vidacha[i].name)
+                for additive in vidacha[i].additives:
+                    additive1 += additive + "; "
+                print(additive1)
 
 
+@bot.message_handler(commands=['finish'])
 def final(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    bot.send_message(message.chat.id, 'Подтвердить заказ?')
-    item9 = types.KeyboardButton("да")
-    item10 = types.KeyboardButton("нет")
+    if len(order_list) == 0:
+        order_list.append(shaurma.shaurma(1, [], bot,message))
+    print(order_list[0].name, "Добавки:")
+    for additive in order_list[0].additives:
+        print(additive, end=" ")
+    print()
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    item9 = KeyboardButton("да")
+    item10 = KeyboardButton("нет")
     markup.add(item9)
     markup.add(item10)
-    bot.send_message(message.chat.id, 'Выберите что хотите', reply_markup=markup)
+    bot.send_message(message.chat.id,f"Ваша шаурма: {order_list[0].name}")
+    bot.send_message(message.chat.id, f"Ваши добавки: {order_list[0].additives}")
+    bot.send_message(message.chat.id, 'Подтвердить заказ?', reply_markup=markup)
 
 
+@bot.message_handler(content_types='text')
+def choice_shaurma(message):
+    if len(order_list) == 0:
+        order_list.append(shaurma.shaurma(1, [], bot,message))
+    global cur
+    #todo Устойчивость к поломке(преждевременного завершения)(можно ещё задание на предотвращение левых добавок) - Тимур, Алексей
+    if message.text == "да":
+        print("Заказ принят")
+        to_do.append(order_list[0])
+        markup = ReplyKeyboardMarkup(resize_keyboard=True)
+        item10 = KeyboardButton("/start")
+        markup.add(item10)
+        bot.send_message(message.chat.id, 'Сделать ешё 1 заказ?', reply_markup=markup)
+        del order_list[0]
+    elif message.text == "нет":
+        print("Заказ отменён")
+        markup = ReplyKeyboardMarkup(resize_keyboard=True)
+        item10 = KeyboardButton("/start")
+        markup.add(item10)
+        bot.send_message(message.chat.id, 'Сделать заказ?', reply_markup=markup)
+        del order_list[0]
+    else:
+        if message.text[0:6] == "шаурма":
+            type, name = message.text.split()
+            order_list[0].name = name
+            choice_additives(message)
+        if message.text[0:7] == "добавка":
+            type, name = message.text.split()
+            order_list[0].additives.append(name)
 thread = Thread(target=scanorder, daemon=True)
 thread.start()
 
-bot.infinity_polling()
+
+thread_bot = Thread(target=bot.infinity_polling, daemon=True)
+thread_bot.start()
+app = QtWidgets.QApplication(sys.argv)
+window = Ui()
+thread_update = Thread(target=window.update, daemon=True)
+thread_update.start()
+app.exec_()
